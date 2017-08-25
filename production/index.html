@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+
+<head>
+    <script src="angular.min.js"></script>
+    <script src="ngFacebook.js"></script>
+    <script src="index.js"></script>
+	 <script src="echarts.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        body::-webkit-scrollbar {
+            width: 1em;
+        }
+        body::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+        }
+        body::-webkit-scrollbar-thumb {
+            background-color: darkgrey;
+            outline: 1px solid slategrey;
+        }
+        html,
+        body {
+            min-height: 100%;
+        }
+        body {
+            position: relative;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            background-color: rgba(247, 247, 247, 1);
+            /*dim the background*/
+        }
+
+		#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  width: 150px;
+  height: 150px;
+  margin: -75px 0 0 -75px;
+  border: 16px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 16px solid #3498db;
+  width: 120px;
+  height: 120px;
+  -webkit-animation: spin 2s linear infinite;
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Add animation to "page content" */
+.animate-bottom {
+  position: relative;
+  -webkit-animation-name: animatebottom;
+  -webkit-animation-duration: 1s;
+  animation-name: animatebottom;
+  animation-duration: 1s
+}
+
+@-webkit-keyframes animatebottom {
+  from { bottom:-100px; opacity:0 } 
+  to { bottom:0px; opacity:1 }
+}
+
+@keyframes animatebottom { 
+  from{ bottom:-100px; opacity:0 } 
+  to{ bottom:0; opacity:1 }
+}
+
+#myDiv1 {
+  display: none;
+  text-align: center;
+}
+    </style>
+    <!-- Special version of Bootstrap that is isolated to content wrapped in .bootstrap-iso -->
+    <link rel="stylesheet" href="https://formden.com/static/cdn/bootstrap-iso.css" />
+
+    <!--Font Awesome (added because you use icons in your prepend/append)-->
+    <link rel="stylesheet" href="https://formden.com/static/cdn/font-awesome/4.4.0/css/font-awesome.min.css" />
+
+    <!-- Inline CSS based on choices in "Settings" tab -->
+
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" type="text/css" rel="stylesheet">
+    <title>Sociolyzer </title>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="nprogress.css" rel="stylesheet">
+    <!-- iCheck -->
+    <link href="green.css" rel="stylesheet">
+
+    <!-- bootstrap-progressbar -->
+    <link href="bootstrap-progressbar-3.3.4.min.css" rel="stylesheet">
+    <!-- JQVMap -->
+    <link href="jqvmap.min.css" rel="stylesheet" />
+    <!-- bootstrap-daterangepicker -->
+    <link href="daterangepicker.css" rel="stylesheet">
+
+    <!-- Custom Theme Style -->
+    <link href="custom.min.css" rel="stylesheet">
+</head>
+
+<body class="nav-md" ng-controller="myCtrl" onload="getchart()">
+
+    <div class="overlay" ng-show="!status">
+        <center>
+            <div style="margin-top:12%;width:70%;border-radius:20px" class="jumbotron">
+                <h1 style="color:#1858c5"> Sociolyzer<sup><sup style="background-color:#d4cece;border-radius:5px;font-size:25px;color:#337ab7">beta</sup></sup></h1>
+				<h3>Accelerate Your Social Growth</h3>
+                <center>
+                    <button class="btn btn-primary" ng-click="loginToggle()" style="background-color:#1858c5;width:auto"><i class="fa fa-facebook"><span style="font-family:calibri"> Login with Facebook</span></i>
+                    </button>
+                </center>
+            </div>
+        </center>
+    </div>
+
+    <div class="container body">
+        <div class="main_container">
+            <div class="col-md-3 left_col">
+                <div class="left_col scroll-view">
+                    <div class="navbar nav_title" style="border: 0;">
+                        <a href="index.html" class="site_title"><i class="fa fa-line-chart"></i> <span>Sociolyzer</span></a>
+                    </div>
+                    <div class="clearfix"></div>
+                    <!-- menu profile quick info -->
+                    <div class="profile clearfix">
+                        <div class="profile_pic">
+                            <img ng-src="{{pic_url}}" alt="profile_pic" class="img-circle profile_img">
+                        </div>
+                        <div class="profile_info">
+                            <span>Welcome,</span>
+                            <h2>{{user.name}}</h2>
+                        </div>
+                    </div>
+                    <!-- /menu profile quick info -->
+                    <br />
+                    <!-- sidebar menu -->
+                    <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+                        <div class="menu_section">
+                            
+                            <ul class="nav side-menu">
+                                <li><a><i class="fa fa-home"></i> Home </a></li>
+
+                                <li><a><i class="fa fa-bar-chart-o"></i> User Demographic <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="5" class="showSingle">Page Fans</a>
+                                        </li>
+                                        <li ><a target="4" class="showSingle">Page Fans By Country</a>
+                                        </li>
+                                        <li><a target="2" class="showSingle">Page Fans By Gender/Age</a>
+                                        </li>
+                                        <li><a target="3" class="showSingle">Page Fans Add</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Page Impressions <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="10" class="showSingle">Total Page Paid/Unpaid Impressions</a>
+                                        </li>
+                                        <li><a target="9" class="showSingle">Total Organic Page Impressions</a>
+                                        </li>
+                                        <li><a target="8" class="showSingle">Page Impressions By Story Type</a>
+                                        </li>
+                                        <li><a target="7" class="showSingle">Page Impressions By City</a>
+                                        </li>
+                                        <li><a target="6" class="showSingle">Page Impressions By Country</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Page Engagements <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="14" class="showSingle">Page Engaged Users</a>
+                                        </li>
+                                        <li><a target="13" class="showSingle">Page Consumption By Type</a>
+                                        </li>
+                                        <li><a target="12" class="showSingle">Page Place Checkin</a>
+                                        </li>
+                                        <li><a target="11" class="showSingle">Page Negetive Feedback By Type</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Page Post Stories <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="22" class="showSingle">Page Stories</a>
+                                        </li>
+                                        <li><a target="21" class="showSingle">Page Stories Tellers</a>
+                                        </li>
+                                        <li><a target="20" class="showSingle">Page Stories Type</a>
+                                        </li>
+                                        <li><a target="19" class="showSingle">Page Story Tellers By Age</a>
+                                        </li>
+                                        <li><a target="18" class="showSingle">Page Stories teller by City</a>
+                                        </li>
+                                        <li><a target="17" class="showSingle">Post Stories</a>
+                                        </li>
+                                        <li><a target="16" class="showSingle">Post Stories Tellers</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Post Reactions<span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="23" class="showSingle">Total Post Reaction</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Page CTA Clicks<span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="25" class="showSingle">Page call phone button clicks</a>
+                                        </li>
+                                        <li><a target="24" class="showSingle">Page get direction button clicks</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li><a><i class="fa fa-bar-chart-o"></i> Page Views <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="26" class="showSingle">Total Page Views When User Logged In</a>
+                                        </li>
+                                        <li><a target="28" class="showSingle">Total Page Views When User Logged Out</a>
+                                        </li>
+                                        <li><a target="29" class="showSingle">Page Views By Profile Tab</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="menu_section">
+                            <ul class="nav side-menu">
+                                <li><a><i class="fa fa-bug"></i> Additional Pages <span class="fa fa-chevron-down"></span></a>
+                                    <ul class="nav child_menu">
+                                        <li><a target="30" class="showSingle">About Us</a>
+                                        </li>
+                                        <li><a target="31" class="showSingle">Privacy Policy</a>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+
+                   </div>
+                    <!-- /sidebar menu -->
+                    <!-- /menu footer buttons -->
+                    <div class="sidebar-footer hidden-small">
+                        <a data-toggle="tooltip" data-placement="top" title="Change Page">
+                            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+                        </a>
+                        <a data-toggle="tooltip" data-placement="top" title="FullScreen" onclick="toggleFullScreen()">
+                            <span class="fa fa-laptop" aria-hidden="true"></span>
+                        </a>
+                        <a data-toggle="tooltip" data-placement="top" title="Change Theme">
+                            <span class="glyphicon glyphicon-random" aria-hidden="true"></span>
+                        </a>
+                        <a data-toggle="tooltip" data-placement="top" title="Logout" ng-click="loginToggle()">
+                            <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+                        </a>
+                    </div>
+                    <!-- /menu footer buttons -->
+                </div>
+            </div>
+
+            <!-- top navigation -->
+            <div class="top_nav">
+                <div class="nav_menu">
+                    <nav>
+                        <div class="nav toggle">
+                            <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+                        </div>
+
+                        <ul class="nav navbar-nav navbar-right">
+                            <li class="">
+                                <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                    <img ng-src="{{pic_url}}" alt="">
+                                    <span class=" fa fa-angle-down"></span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-usermenu pull-right">
+                                    <li><a href="login.html"><i class="fa fa-sign-out pull-right"></i> Logout</a>
+                                    </li>
+                                </ul>
+                            </li>
+
+                            <li role="presentation" class="dropdown" ng-click="getPage()">
+                                <a href="javascript:;" class="dropdown-toggle info-number" data-toggle="dropdown" aria-expanded="false">
+                                    <span>Change Page </span>
+                                    <i class="fa fa-file-o"></i>
+                                </a>
+                                <ul id="menu1" class="dropdown-menu list-unstyled msg_list" role="menu">
+                                    <div style="width:100%">
+                                        Number of pages: {{length}}
+                                    </div>
+                                    <li ng-repeat="page in Pages track by $index" data-ng-click="getId(Ids[$index])" id="{{Ids[$index]}}" style="cursor: pointer">
+                                        <span class="image"> <img ng-src="{{Urls[$index]}}"/ style="float:left"> </span>
+                                        <span class="title"> {{page}} </span>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            <!-- /top navigation -->
+
+            <!-- page content -->
+            <div class="right_col" role="main">
+                <!-- top tiles -->
+                <!-- /top tiles -->
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="dashboard_graph">
+                                <div class="row x_title">
+                                    <div class="col-md-12">
+                                        <span class="nav navbar-nav navbar-right" style="margin-right:5px">
+                <span class="badge badge-info badge-icon" style="width:60px;color:white"><i class="fa fa-calendar"></i> Until</span>
+                                        <input type="date" ng-model="until" class="btn btn-info" placeholder="DD/MM/YYYY">
+                                        </span>
+                                        <span class="nav navbar-nav navbar-right" style="margin-right:5px">
+                <span class="badge badge-info badge-icon"  style="width:60px;color:white"> <i class="fa fa-calendar"></i> Since </span>
+                                        <input type="date" ng-model="since" class="btn btn-info" placeholder="DD/MM/YYYY">
+                                        </span>
+				<button class="btn btn-primary" onclick="getchart()">Refresh</button>
+				<span class="btn btn-primary"  style="width:auto;color:white"> {{initpage}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <!-- end of weather widget -->
+				  <div id="div2" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Fans By Gender/Age</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main6" style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div3" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Fans Add</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main3" style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+			      <div id="div4" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Fans By Country</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+				  <div id="div5" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Fans Distribution</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main" style="height:400px;width:auto"></div> </center>
+							</div> 
+					
+                        </div>
+				</div>
+				
+				  <div id="div6" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Impressions By Country</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+				  <div id="div7" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Impressions By City</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+				  <div id="div8" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Impressions By Story Type</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main7" style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+				  <div id="div9" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Total Organic Page Impressions</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main2" style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+
+				  <div id="div10" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Total Page Paid/Unpaid Impressions</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main5" style="height:400px;width:auto">
+							 <h1>{{values5.total}}</h1>
+							 <h1>{{values5.paid}}</h1>
+							 <h1>{{values5.unpaid}}</h1>
+							 </div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div11" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Negetive Feedback By Type</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				  
+				  <div id="div12" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Place Checkin</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				  
+				  <div id="div13" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Consumption By Type</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				</div>
+				
+				  <div id="div14" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Engaged Users</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div15" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Fans Distribution</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div16" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Post Stories Tellers</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div17" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Post Stories</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div18" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Stories teller by City</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				
+				  <div id="div19" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Story Tellers By Age</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				
+				  <div id="div20" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Stories Type</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				
+				  <div id="div21" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Stories Tellers</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				  
+				  <div id="div22" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Stories</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div23" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Total Post Reaction</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div24" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page get direction button clicks</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				   </div>
+				
+				  <div id="div25" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page call phone button clicks</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div id="main4" style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				
+				  <div id="div26" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Total Page Views When User Logged In</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				
+				  <div id="div28" class="targetDiv">
+				
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Total Page Views When User Logged Out</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+				  
+				  <div id="div29" class="targetDiv">
+                        <div class="x_panel">
+                            <div class="x_title">
+                                <h2>Page Views By Profile Tab</h2>
+                                <ul class="nav navbar-right panel_toolbox">
+                                    <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                                    </li>
+                                    <li class="dropdown">
+                                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-wrench"></i></a>
+                                        <ul class="dropdown-menu" role="menu">
+                                            <li><a href="#">Pie Chart</a>
+                                            </li>
+                                            <li><a href="#">Line Chart</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li><a class="close-link"><i class="fa fa-close"></i></a>
+                                    </li>
+                                </ul>
+                                <div class="clearfix"></div>
+                            </div>
+                            <div class="x_content">
+                             <center> <div style="height:400px;width:auto"></div>  </center>
+                            </div>
+                        </div>
+				  </div>
+                <!-- /page content -->
+            </div>
+        </div>
+
+        <!-- jQuery -->
+        <script src="jquery.min.js"></script>
+        <!-- Bootstrap -->
+        <script src="bootstrap.min.js"></script>
+        <!-- FastClick -->
+        <script src="fastclick.js"></script>
+        <!-- NProgress -->
+        <script src="nprogress.js"></script>
+        <!-- Chart.js -->
+        <script src="Chart.min.js"></script>
+        <!-- gauge.js -->
+        <script src="gauge.min.js"></script>
+        <!-- bootstrap-progressbar -->
+        <script src="bootstrap-progressbar.min.js"></script>
+        <!-- iCheck -->
+        <script src="icheck.min.js"></script>
+        <!-- Skycons -->
+        <script src="skycons.js"></script>
+        <!-- Flot -->
+        <script src="jquery.flot.js"></script>
+        <script src="jquery.flot.pie.js"></script>
+        <script src="jquery.flot.time.js"></script>
+        <script src="jquery.flot.stack.js"></script>
+        <script src="jquery.flot.resize.js"></script>
+        <!-- Flot plugins -->
+        <script src="jquery.flot.orderBars.js"></script>
+        <script src="jquery.flot.spline.min.js"></script>
+        <script src="curvedLines.js"></script>
+        <!-- DateJS -->
+        <script src="date.js"></script>
+        <!-- JQVMap -->
+        <script src="jquery.vmap.js"></script>
+        <script src="jquery.vmap.world.js"></script>
+        <script src="jquery.vmap.sampledata.js"></script>
+        <!-- bootstrap-daterangepicker -->
+        <script src="moment.min.js"></script>
+        <script src="daterangepicker.js"></script>
+
+        <!-- Custom Theme Scripts -->
+        <script src="custom.min.js"></script>
+        <script type="text/javascript">
+            function toggleFullScreen() {
+                if ((document.fullScreenElement && document.fullScreenElement !== null) ||
+                    (!document.mozFullScreen && !document.webkitIsFullScreen)) {
+                    if (document.documentElement.requestFullScreen) {
+                        document.documentElement.requestFullScreen();
+                    } else if (document.documentElement.mozRequestFullScreen) {
+                        document.documentElement.mozRequestFullScreen();
+                    } else if (document.documentElement.webkitRequestFullScreen) {
+                        document.documentElement.webkitRequestFullScreen(Element.ALLOW_KEYBOARD_INPUT);
+                    }
+                } else {
+                    if (document.cancelFullScreen) {
+                        document.cancelFullScreen();
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                    } else if (document.webkitCancelFullScreen) {
+                        document.webkitCancelFullScreen();
+                    }
+                }
+            }
+        </script>
+<center>
+<!--<a  id="showall">All</a>
+<a  class="showSingle" target="1">Div 1</a>
+<a  class="showSingle" target="2">Div 2</a>
+<a  class="showSingle" target="3">Div 3</a>
+<a  class="showSingle" target="4">Div 4</a>
+<a  class="showSingle" target="5">Div 5</a>
+<a  class="showSingle" target="6">Div 6</a>
+<a  class="showSingle" target="7">Div 7</a> -->
+
+</center>
+
+
+        <!-- Extra JavaScript/CSS added manually in "Settings" tab -->
+        <!-- Include jQuery -->
+        <!--<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script> -->
+
+        <!-- Include Date Range Picker -->
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css" />
+        <script>
+            jQuery(function() {
+                jQuery('#showall').click(function() {
+                    jQuery('.targetDiv').show();
+                });
+                jQuery('.showSingle').click(function() {
+                    jQuery('.targetDiv').hide();
+                    jQuery('#div' + $(this).attr('target')).show();
+                });
+            });
+        </script>
+       
+        <script src="chartnew.js"> </script>
+		<script>
+function showPage() {
+  document.getElementById("loader").style.display = "none";
+  document.getElementById("shubham").style.display = "block";
+}
+</script>
+
+</body>
+
+</html>
